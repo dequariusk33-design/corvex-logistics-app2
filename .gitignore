@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build output
+dist/
+build/
+.cache/
+
+# Android
+android/.gradle/
+android/local.properties
+android/build/
+android/app/build/
+*.apk
+*.aab
+
+# iOS
+ios/App/build/
+ios/App/xcuserdata/
+ios/App/*.xcworkspace/xcuserdata/
+DerivedData/
+ios/App/Pods/
+
+# Credentials
+*.pem
+*.key
+*.p12
+*.p8
+*.mobileprovision
+credentials.json
+secrets.json
+service-account.json
+
+# System files
+.DS_Store
+Thumbs.db
