@@ -477,11 +477,184 @@
 
         <div class="panel map-panel live-driver-panel">
 
-          <div
-            id="driverLiveMap"
-            class="live-map driver-map"
-            aria-label="Driver live map"
-          ></div>
+         <div id="driverLiveMap" class="corvex-demo-map" aria-label="Corvex demo delivery route">
+
+  <svg
+    class="corvex-map-svg"
+    viewBox="0 0 800 500"
+    preserveAspectRatio="xMidYMid slice"
+    aria-hidden="true"
+  >
+
+    <rect width="800" height="500" fill="#f3f3f0"/>
+
+    <!-- GREEN SPACE -->
+    <path
+      d="M560 0 H800 V185
+         C730 175 690 210 625 185
+         C575 166 548 110 560 0Z"
+      fill="#dcebd0"
+    />
+
+    <!-- CITY STREETS -->
+    <g
+      stroke="#ffffff"
+      stroke-width="20"
+      fill="none"
+    >
+      <path d="M0 100 H800"/>
+      <path d="M0 220 H800"/>
+      <path d="M0 360 H800"/>
+      <path d="M140 0 V500"/>
+      <path d="M350 0 V500"/>
+      <path d="M560 0 V500"/>
+      <path d="M710 0 V500"/>
+    </g>
+
+    <g
+      stroke="#d5d5d0"
+      stroke-width="2"
+      fill="none"
+    >
+      <path d="M0 100 H800"/>
+      <path d="M0 220 H800"/>
+      <path d="M0 360 H800"/>
+      <path d="M140 0 V500"/>
+      <path d="M350 0 V500"/>
+      <path d="M560 0 V500"/>
+      <path d="M710 0 V500"/>
+    </g>
+
+    <!-- DELIVERY ROUTE -->
+    <path
+      d="M100 390
+         C160 330 220 300 300 300
+         C390 300 430 335 500 315
+         C585 290 615 235 690 205"
+      stroke="#111111"
+      stroke-width="11"
+      fill="none"
+      stroke-linecap="round"
+    />
+
+    <!-- PICKUP -->
+    <circle
+      cx="100"
+      cy="390"
+      r="25"
+      fill="#ffffff"
+      stroke="#111111"
+      stroke-width="6"
+    />
+
+    <circle
+      cx="100"
+      cy="390"
+      r="7"
+      fill="#111111"
+    />
+
+    <!-- DESTINATION -->
+    <circle
+      cx="690"
+      cy="205"
+      r="30"
+      fill="#111111"
+      stroke="#ffffff"
+      stroke-width="6"
+    />
+
+    <text
+      x="690"
+      y="214"
+      text-anchor="middle"
+      font-size="27"
+      font-weight="900"
+      fill="#ffffff"
+    >
+      ⌂
+    </text>
+
+    <!-- CORVEX VEHICLE -->
+    <g class="corvex-car-marker">
+
+      <circle
+        cx="500"
+        cy="315"
+        r="32"
+        fill="#ff2b2b"
+        stroke="#ffffff"
+        stroke-width="7"
+      />
+
+      <text
+        x="500"
+        y="321"
+        text-anchor="middle"
+        font-size="15"
+        font-weight="900"
+        fill="#ffffff"
+      >
+        CVX
+      </text>
+
+    </g>
+
+    <!-- STREET NAMES -->
+    <g
+      font-family="Arial, sans-serif"
+      font-size="16"
+      fill="#777777"
+    >
+
+      <text x="190" y="88">
+        Metro Parkway
+      </text>
+
+      <text x="390" y="208">
+        Healthcare Drive
+      </text>
+
+      <text x="570" y="348">
+        Medical Center Blvd
+      </text>
+
+    </g>
+
+  </svg>
+
+
+  <div class="corvex-map-top">
+
+    <span class="corvex-map-live">
+      <i></i>
+      DEMO ROUTE
+    </span>
+
+    <span class="corvex-map-eta">
+      ETA 12 min
+    </span>
+
+  </div>
+
+
+  <div class="corvex-map-bottom">
+
+    <div>
+      <small>Pickup</small>
+      <strong>West Metro Pharmacy</strong>
+    </div>
+
+    <span>→</span>
+
+    <div>
+      <small>Destination</small>
+      <strong>Lakeside Care Center</strong>
+    </div>
+
+  </div>
+
+</div>
 
           <div class="driver-map-controls">
 
