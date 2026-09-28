@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#081321" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Corvex" />
+  <meta name="description" content="Corvex Logistics mobile operations app with live driver tracking." />
+  <title>Corvex Logistics App</title>
+
+  <link rel="manifest" href="manifest.webmanifest" />
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIINfQ3yn6d5qoqro+uA+PmX9uWxXgSpHKw="
+    crossorigin=""
+  />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="app-shell">
+
+    <header class="topbar">
+      <a class="brand" href="#home" aria-label="Corvex home">
+        <span class="brand-word">CORVEX<span>•</span></span>
+      </a>
+
+      <div class="top-actions">
+        <span id="liveBackendBadge" class="network-badge">Demo Live</span>
+        <span id="networkBadge" class="network-badge">Online</span>
+        <button id="installBtn" class="install-btn" type="button" hidden>
+          Install
+        </button>
+      </div>
+    </header>
+
+    <main id="app" tabindex="-1">
+
+      <!-- HOME -->
+
+      <section class="screen active" id="home" data-screen="home">
+
+        <div class="hero-card">
+          <div>
+            <span class="eyebrow">CORVEX LOGISTICS 2.1</span>
+
+            <h1>
+              Healthcare movement, now live.
+            </h1>
+
+            <p>
+              Create, assign, track, and verify deliveries from pickup through
+              proof of delivery.
+            </p>
+          </div>
+
+          <div class="hero-mark">
+            C<span>•</span>
+          </div>
+        </div>
+
+        <div class="notice">
+          <strong>Live tracking update</strong>
+
+          <span>
+            Driver GPS, customer tracking view, ETA, route progress, and
+            verification PIN are now included. Demo mode keeps data on this
+            device unless a realtime backend is configured.
+          </span>
+        </div>
+
+        <div class="role-grid" aria-label="Choose a workflow">
+
+          <button class="role-card" data-go="customer">
+            <span class="role-icon">＋</span>
+            <b>Customer</b>
+            <small>Create & track deliveries</small>
+          </button>
+
+          <button class="role-card" data-go="driver">
+            <span class="role-icon">↗</span>
+            <b>Driver</b>
+            <small>Live GPS & proof of delivery</small>
+          </button>
+
+          <button class="role-card" data-go="dispatch">
+            <span class="role-icon">⌁</span>
+            <b>Dispatch</b>
+            <small>Assign & monitor jobs</small>
+          </button>
+
+        </div>
+
+        <div class="section-title">
+          <h2>Today</h2>
+          <span id="todayDate"></span>
+        </div>
+
+        <div class="metric-grid">
+
+          <article>
+            <strong id="metricActive">2</strong>
+            <span>Active</span>
+          </article>
+
+          <article>
+            <strong id="metricDelivered">1</strong>
+            <span>Delivered</span>
+          </article>
+
+          <article>
+            <strong id="metricPending">1</strong>
+            <span>Pending</span>
+          </article>
+
+        </div>
+
+      </section>
+
+
+      <!-- CUSTOMER -->
+
+      <section class="screen" id="customer" data-screen="customer">
+
+        <div class="screen-head">
+
+          <div>
+            <span class="eyebrow">CUSTOMER PORTAL</span>
+            <h2>Create a delivery</h2>
+          </div>
+
+          <span class="pill">Demo</span>
+
+        </div>
+
+        <form id="deliveryForm" class="panel form-grid">
+
+          <label>
+            Pickup location
+
+            <input
+              name="pickup"
+              required
+              placeholder="Pharmacy or facility"
+              autocomplete="off"
+            />
+          </label>
+
+          <label>
+            Drop-off location
+
+            <input
+              name="dropoff"
+              required
+              placeholder="Facility or recipient location"
+              autocomplete="off"
+            />
+          </label>
+
+          <label>
+            Service
+
+            <select name="service" required>
+              <option value="Routine">Routine</option>
+              <option value="Same-day">Same-day</option>
+              <option value="STAT">STAT / urgent</option>
+              <option value="LTC route">LTC route</option>
+            </select>
+          </label>
+
+          <label>
+            Handling
+
+            <select name="handling">
+              <option value="Standard">Standard</option>
+              <option value="Temperature-sensitive">
+                Temperature-sensitive
+              </option>
+              <option value="Signature required">
+                Signature required
+              </option>
+            </select>
+          </label>
+
+          <label class="full">
+            Operational notes
+
+            <textarea
+              name="notes"
+              rows="3"
+              placeholder="No patient names or PHI in this demo."
+            ></textarea>
+          </label>
+
+          <button class="primary full" type="submit">
+            Create Demo Delivery
+          </button>
+
+        </form>
+
+        <div class="section-title">
+          <h2>Recent deliveries</h2>
+
+          <button id="clearDemo" class="text-btn" type="button">
+            Reset demo
+          </button>
+        </div>
+
+        <div id="customerJobs" class="job-list"></div>
+
+      </section>
+
+
+      <!-- CUSTOMER LIVE TRACKING -->
+
+      <section
+        class="screen tracking-screen"
+        id="tracking"
+        data-screen="tracking"
+      >
+
+        <div class="tracking-map-wrap">
+
+          <div
+            id="customerLiveMap"
+            class="live-map"
+            aria-label="Live delivery map"
+          ></div>
+
+          <button
+            class="map-back"
+            type="button"
+            data-go="customer"
+            aria-label="Back to deliveries"
+          >
+            ×
+          </button>
+
+          <div class="map-live-chip">
+            <span class="pulse-dot"></span>
+            <span id="trackingMapState">LIVE</span>
+          </div>
+
+        </div>
+
+        <div class="tracking-sheet">
+
+          <div class="tracking-head">
+
+            <div>
+              <span class="eyebrow">LIVE DELIVERY</span>
+              <h2 id="trackingHeading">Heading to you</h2>
+            </div>
+
+            <span id="trackingStatusPill" class="pill live">
+              En route
+            </span>
+
+          </div>
+
+          <div class="eta-row">
+
+            <span class="eta-badge">
+              On time
+            </span>
+
+            <strong id="trackingEta">
+              12–18 min
+            </strong>
+
+            <small id="trackingUpdated">
+              Waiting for driver location…
+            </small>
+
+          </div>
+
+          <div
+            class="progress-track"
+            aria-label="Delivery progress"
+          >
+
+            <span class="progress-node done">
+              1
+            </span>
+
+            <i class="done"></i>
+
+            <span class="progress-node done">
+              2
+            </span>
+
+            <i id="progressLeg3"></i>
+
+            <span
+              id="progressNode3"
+              class="progress-node"
+            >
+              3
+            </span>
+
+            <i id="progressLeg4"></i>
+
+            <span
+              id="progressNode4"
+              class="progress-node"
+            >
+              ✓
+            </span>
+
+          </div>
+
+          <div class="progress-labels">
+            <span>Assigned</span>
+            <span>Picked up</span>
+            <span>Arriving</span>
+            <span>Delivered</span>
+          </div>
+
+          <p
+            id="trackingMessage"
+            class="tracking-message"
+          >
+            Your Corvex driver is heading to the delivery location.
+          </p>
+
+          <div class="driver-row">
+
+            <div class="driver-avatar">
+              CV
+            </div>
+
+            <div>
+              <small>Your Corvex driver</small>
+              <b id="trackingDriver">Jordan M.</b>
+            </div>
+
+            <button
+              id="copyTrackingLink"
+              class="icon-action"
+              type="button"
+              title="Copy tracking link"
+            >
+              ↗
+            </button>
+
+          </div>
+
+          <div class="tracking-info-grid">
+
+            <div>
+              <small>Delivery</small>
+              <b id="trackingJobId">CVX-2401</b>
+            </div>
+
+            <div>
+              <small>Service</small>
+              <b id="trackingService">STAT</b>
+            </div>
+
+          </div>
+
+          <div class="pin-card">
+
+            <small>
+              Secure handoff PIN
+            </small>
+
+            <p>
+              Provide this PIN only in person when the delivery is
+              physically handed off.
+            </p>
+
+            <strong id="trackingPin">
+              ••••
+            </strong>
+
+            <button
+              id="revealPinBtn"
+              class="text-btn"
+              type="button"
+            >
+              Reveal PIN
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- DRIVER -->
+
+      <section class="screen" id="driver" data-screen="driver">
+
+        <div class="screen-head">
+
+          <div>
+            <span class="eyebrow">DRIVER MODE</span>
+            <h2>Current route</h2>
+          </div>
+
+          <span
+            id="driverLivePill"
+            class="pill"
+          >
+            GPS off
+          </span>
+
+        </div>
+
+        <article
+          id="driverCard"
+          class="route-card"
+        >
+
+          <div class="route-top">
+
+            <span id="driverJobId">
+              CVX-2401
+            </span>
+
+            <span
+              id="driverPriority"
+              class="priority"
+            >
+              STAT
+            </span>
+
+          </div>
+
+          <div class="route-line">
+
+            <span class="route-dot pickup"></span>
+
+            <div>
+              <small>Pickup</small>
+              <b id="driverPickup">
+                West Metro Pharmacy
+              </b>
+            </div>
+
+          </div>
+
+          <div class="route-track"></div>
+
+          <div class="route-line">
+
+            <span class="route-dot dropoff"></span>
+
+            <div>
+              <small>Drop-off</small>
+              <b id="driverDropoff">
+                Lakeside Care Center
+              </b>
+            </div>
+
+          </div>
+
+          <div class="route-meta">
+
+            <span>
+              ETA
+              <b id="driverEta">—</b>
+            </span>
+
+            <span>
+              Handling
+              <b id="driverHandling">
+                Signature
+              </b>
+            </span>
+
+          </div>
+
+        </article>
+
+        <div class="panel map-panel live-driver-panel">
+
+          <div
+            id="driverLiveMap"
+            class="live-map driver-map"
+            aria-label="Driver live map"
+          ></div>
+
+          <div class="driver-map-controls">
+
+            <button
+              id="startLiveTracking"
+              class="primary"
+              type="button"
+            >
+              Start Live GPS
+            </button>
+
+            <button
+              id="stopLiveTracking"
+              class="secondary"
+              type="button"
+              disabled
+            >
+              Stop
+            </button>
+
+          </div>
+
+          <div
+            id="driverGpsStatus"
+            class="status-message"
+          >
+            Live GPS is off. Start tracking when the delivery begins.
+          </div>
+
+        </div>
+
+        <div class="panel">
+
+          <h3>
+            Status
+          </h3>
+
+          <div class="status-actions four">
+
+            <button
+              data-status="Arrived"
+              type="button"
+            >
+              Arrived
+            </button>
+
+            <button
+              data-status="Picked up"
+              type="button"
+            >
+              Picked up
+            </button>
+
+            <button
+              data-status="En route"
+              type="button"
+            >
+              En route
+            </button>
+
+            <button
+              data-status="Delivered"
+              type="button"
+            >
+              Delivered
+            </button>
+
+          </div>
+
+          <div
+            id="driverStatus"
+            class="status-message"
+          >
+            Ready for pickup
+          </div>
+
+        </div>
+
+        <div class="panel">
+
+          <h3>
+            Proof of delivery
+          </h3>
+
+          <p class="muted">
+            Capture delivery location and demo proof.
+            Replace with production camera/signature modules
+            before handling protected health information.
+          </p>
+
+          <div class="pod-actions">
+
+            <button
+              id="locationBtn"
+              class="secondary"
+              type="button"
+            >
+              Capture location
+            </button>
+
+            <button
+              id="podBtn"
+              class="secondary"
+              type="button"
+            >
+              Capture demo POD
+            </button>
+
+          </div>
+
+          <div
+            id="podResult"
+            class="pod-result"
+          >
+            No proof captured yet.
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- DISPATCH -->
+
+      <section
+        class="screen"
+        id="dispatch"
+        data-screen="dispatch"
+      >
+
+        <div class="screen-head">
+
+          <div>
+            <span class="eyebrow">
+              COMMAND CENTER
+            </span>
+
+            <h2>
+              Dispatch overview
+            </h2>
+          </div>
+
+          <span class="pill live">
+            Live-ready
+          </span>
+
+        </div>
+
+        <div class="metric-grid dispatch-metrics">
+
+          <article>
+            <strong id="dispatchOpen">
+              3
+            </strong>
+            <span>Open jobs</span>
+          </article>
+
+          <article>
+            <strong>2</strong>
+            <span>Drivers online</span>
+          </article>
+
+          <article>
+            <strong>0</strong>
+            <span>Exceptions</span>
+          </article>
+
+        </div>
+
+        <div class="panel map-panel">
+
+          <div
+            id="dispatchMap"
+            class="live-map dispatch-map"
+            aria-label="Dispatch live map"
+          ></div>
+
+          <div class="map-legend">
+
+            <span>
+              <i></i>
+              Driver
+            </span>
+
+            <span>
+              <i></i>
+              Destination
+            </span>
+
+          </div>
+
+        </div>
+
+        <div class="section-title">
+
+          <h2>
+            Dispatch queue
+          </h2>
+
+          <span>
+            Tap a job to assign
+          </span>
+
+        </div>
+
+        <div
+          id="dispatchJobs"
+          class="job-list"
+        ></div>
+
+      </section>
+
+
+      <!-- SETTINGS -->
+
+      <section
+        class="screen"
+        id="settings"
+        data-screen="settings"
+      >
+
+        <div class="screen-head">
+
+          <div>
+            <span class="eyebrow">
+              APP SETTINGS
+            </span>
+
+            <h2>
+              Install & build
+            </h2>
+          </div>
+
+        </div>
+
+        <div class="panel">
+
+          <h3>
+            Install this PWA
+          </h3>
+
+          <p
+            id="installHelp"
+            class="muted"
+          >
+            On iPhone: open this site in Safari,
+            tap Share, then Add to Home Screen.
+            On Android: use Install app in Chrome.
+          </p>
+
+          <button
+            id="installBtn2"
+            class="primary"
+            type="button"
+          >
+            Install / Show Instructions
+          </button>
+
+        </div>
+
+        <div class="panel">
+
+          <h3>
+            Realtime backend
+          </h3>
+
+          <p class="muted">
+            Set your Supabase URL and anon key in
+            <code>config.js</code>,
+            then apply authenticated production policies
+            before handling real delivery data.
+          </p>
+
+        </div>
+
+      </section>
+
+    </main>
+
+
+    <!-- BOTTOM NAVIGATION -->
+
+    <nav
+      class="bottom-nav"
+      aria-label="App navigation"
+    >
+
+      <button
+        class="nav-item active"
+        data-go="home"
+      >
+        <span>⌂</span>
+        <small>Home</small>
+      </button>
+
+      <button
+        class="nav-item"
+        data-go="customer"
+      >
+        <span>＋</span>
+        <small>Create</small>
+      </button>
+
+      <button
+        class="nav-item"
+        data-go="driver"
+      >
+        <span>↗</span>
+        <small>Driver</small>
+      </button>
+
+      <button
+        class="nav-item"
+        data-go="dispatch"
+      >
+        <span>⌁</span>
+        <small>Dispatch</small>
+      </button>
+
+      <button
+        class="nav-item"
+        data-go="settings"
+      >
+        <span>⚙</span>
+        <small>Settings</small>
+      </button>
+
+    </nav>
+
+  </div>
+
+
+  <!-- ASSIGN DRIVER DIALOG -->
+
+  <dialog id="assignDialog">
+
+    <form
+      method="dialog"
+      class="dialog-card"
+    >
+
+      <button
+        class="dialog-close"
+        value="cancel"
+        aria-label="Close"
+      >
+        ×
+      </button>
+
+      <span class="eyebrow">
+        ASSIGN DELIVERY
+      </span>
+
+      <h3 id="assignJobTitle">
+        Assign CVX-0000
+      </h3>
+
+      <label>
+        Driver
+
+        <select id="driverSelect">
+          <option>Jordan M.</option>
+          <option>Taylor R.</option>
+          <option>Unassigned</option>
+        </select>
+      </label>
+
+      <button
+        id="confirmAssign"
+        class="primary"
+        value="default"
+        type="button"
+      >
+        Assign Driver
+      </button>
+
+    </form>
+
+  </dialog>
+
+
+  <div
+    id="toast"
+    class="toast"
+    role="status"
+    aria-live="polite"
+  ></div>
+
+
+  <!-- MAP LIBRARY -->
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <!-- REALTIME LIBRARY -->
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
