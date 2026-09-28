@@ -143,16 +143,34 @@ function go(screen) {
   document
     .getElementById('app')
     .focus({
-      preventScroll: true
-    });
-
-  setTimeout(() => {
-    Object.values(maps).forEach(map => {
-      map?.invalidateSize?.();
-    });
-  }, 180);
+      preventScroll: 
 }
 
+setTimeout(() => {
+  if (screen === 'driver') {
+    const jobs = getJobs();
+
+    const delivery =
+      jobs.find(job => job.status === 'En route') ||
+      jobs.find(job => job.status === 'Picked up') ||
+      jobs.find(job => job.status === 'Assigned') ||
+      jobs.find(job => job.status !== 'Delivered');
+
+    if (delivery) {
+      refreshDriverRouteMap(delivery);
+    }
+  }
+
+  if (screen === 'dispatch') {
+    refreshDispatchMap();
+  }
+
+  if (screen === 'tracking') {
+    maps.customerLiveMap?.invalidateSize();
+  }
+
+  maps[`${screen}LiveMap`]?.invalidateSize();
+}, 150);
 document.addEventListener('click', e => {
   const button = e.target.closest('[data-go]');
 
@@ -349,10 +367,10 @@ function renderAll() {
         ''
       );
 
-    refreshDriverRouteMap(delivery);
+
   }
 
-  refreshDispatchMap();
+  
 }
 
 renderAll();
